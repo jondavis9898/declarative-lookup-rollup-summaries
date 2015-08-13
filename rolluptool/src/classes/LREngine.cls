@@ -163,12 +163,24 @@ public class LREngine {
                 }
                 // create order by projections
                 // i.e. Amount ASC NULLS FIRST
-                String orderByField = 
-                    rsf.detailOrderBy!=null ? rsf.detailOrderBy.getName() : rsf.detail.getName();
-                if(!orderByFieldsSet.contains(orderByField)) {
-                    orderByFields.add(orderByField);
-                    orderByFieldsSet.add(orderByField);
-                }
+                //String orderByField = 
+                //    rsf.detailOrderBy!=null ? rsf.detailOrderBy.getName() : rsf.detail.getName();
+                if(rsf.detailOrder != null && !rsf.detailOrder.isEmpty()) {
+                    for(fflib_QueryFactory.Ordering o :rsf.detailOrder) {
+                        String orderByField = o.getField().getDescribe().getName();
+                        String orderByClause = o.toSOQL();
+                        if(!orderByFieldsSet.contains(orderByField)) {
+                            orderByFields.add(orderByClause);
+                            orderByFieldsSet.add(orderByField);
+                        }
+                    }
+                } else {
+                    String orderByField = rsf.detail.getName();                    
+                    if(!orderByFieldsSet.contains(orderByField)) {
+                        orderByFields.add(orderByField);
+                        orderByFieldsSet.add(orderByField);
+                    }
+                }                
             }
         }
         
@@ -367,7 +379,8 @@ public class LREngine {
     public class RollupSummaryField {
         public Schema.Describefieldresult master;
         public Schema.Describefieldresult detail;
-        public Schema.Describefieldresult detailOrderBy;
+        //public Schema.Describefieldresult detailOrderBy;
+        public List<fflib_QueryFactory.Ordering> detailOrder;
         public RollupOperation operation;
         public String concatenateDelimiter;
         
@@ -383,7 +396,7 @@ public class LREngine {
 
         public RollupSummaryField(Schema.Describefieldresult m, 
                                          Schema.Describefieldresult d, RollupOperation op) {
-            this(m, d, null, op, null);
+            this(m, d, (List<fflib_QueryFactory.Ordering>)null, op, null);
         }
 
         public RollupSummaryField(Schema.Describefieldresult m, 
@@ -391,9 +404,22 @@ public class LREngine {
                                          Schema.Describefieldresult detailOrderBy,
                                          RollupOperation op,
                                          String concatenateDelimiter) {
+            
+            //SObjectField detailField = detailOrderBy.getSObjectField();
+            //fflib_QueryFactory.QueryField qf = new fflib_QueryFactory.QueryField(detailField);
+            //fflib_QueryFactory.Ordering ordering = new fflib_QueryFactory.Ordering(qf, fflib_QueryFactory.SortOrder.ASCENDING);
+
+            this(m, d, (detailOrderBy == null ? null : new List<fflib_QueryFactory.Ordering> { new fflib_QueryFactory.Ordering(detailOrderBy.getSObjectField(), fflib_QueryFactory.SortOrder.ASCENDING) }), op, concatenateDelimiter);
+        }
+
+        public RollupSummaryField(Schema.Describefieldresult m, 
+                                         Schema.Describefieldresult d, 
+                                         List<fflib_QueryFactory.Ordering> detailOrder,
+                                         RollupOperation op,
+                                         String concatenateDelimiter) {
             this.master = m;
             this.detail = d;
-            this.detailOrderBy = detailOrderBy;
+            this.detailOrder = detailOrder;
             this.operation = op;
             this.concatenateDelimiter = concatenateDelimiter;
             // caching these derived attrbutes for once

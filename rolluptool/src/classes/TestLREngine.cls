@@ -105,7 +105,7 @@ private class TestLREngine {
 	         Opportunity o1Acc2 = new Opportunity(
 	 												Name = 'o1Acc2',
 	                                                AccountId = acc2.Id,
-	                                                Amount = 200.00,
+	                                                Amount = 301.00,
 	                                                CloseDate = System.today().addMonths(2),
 	                                                StageName = 'Won'
 	         									);
@@ -114,7 +114,7 @@ private class TestLREngine {
 	 												Name = 'o2Acc2',
 	                                                AccountId = acc2.Id,
 	                                                Amount = 400.00,
-	                                                CloseDate = System.today().addMonths(3),
+	                                                CloseDate = System.today().addMonths(2),
 	                                                StageName = 'Lost'
 	         									);
 	
@@ -122,8 +122,8 @@ private class TestLREngine {
 	 												Name = 'o3Acc2',
 	                                                AccountId = acc2.Id,
 	                                                Amount = 300.00,
-	                                                CloseDate = System.today().addMonths(4),
-	                                                StageName = 'Won'
+	                                                CloseDate = System.today().addMonths(2),
+	                                                StageName = 'test'
 	         									);
 	         detailRecords = new Opportunity[] {o1Acc1, o2Acc1, o3Acc1, o1Acc2, o2Acc2, o3Acc2};
              if(ANNUALIZED_RECCURING_REVENUE!=null)
@@ -675,7 +675,7 @@ private class TestLREngine {
             new LREngine.RollupSummaryField(
                     Schema.SObjectType.Account.fields.AccountNumber,
                     Schema.SObjectType.Opportunity.fields.StageName,
-                    null, LREngine.RollupOperation.Concatenate, '01234567890123456789,'),
+                    (Schema.Describefieldresult)null, LREngine.RollupOperation.Concatenate, '01234567890123456789,'),
                 'test01234567890123456789,test01234567...',
                 'Lost01234567890123456789,Won012345678...');
     }    
@@ -685,7 +685,7 @@ private class TestLREngine {
             new LREngine.RollupSummaryField(
                     Schema.SObjectType.Account.fields.Description,
                     Schema.SObjectType.Opportunity.fields.StageName,
-                    null, LREngine.RollupOperation.Concatenate, ','),
+                    (Schema.Describefieldresult)null, LREngine.RollupOperation.Concatenate, ','),
                 'test,test,test',
                 'Lost,Won,Won');
     } 
@@ -696,7 +696,7 @@ private class TestLREngine {
             new LREngine.RollupSummaryField(
                     Schema.SObjectType.Account.fields.Description,
                     Schema.SObjectType.Opportunity.fields.StageName,
-                    null, LREngine.RollupOperation.Concatenate, 'BR()'),
+                    (Schema.Describefieldresult)null, LREngine.RollupOperation.Concatenate, 'BR()'),
                 'test\ntest\ntest',
                 'Lost\nWon\nWon');
     } 
@@ -712,12 +712,27 @@ private class TestLREngine {
                 'Won,Won,Lost');
     } 
 
+    static testMethod void testRollupConcatenateOrderByMultiple() {
+        List<fflib_QueryFactory.Ordering> order = new List<fflib_QueryFactory.Ordering>();
+        order.add(new fflib_QueryFactory.Ordering(Schema.SObjectType.Opportunity.fields.CloseDate.getSObjectField(), fflib_QueryFactory.SortOrder.ASCENDING));
+        order.add(new fflib_QueryFactory.Ordering(Schema.SObjectType.Opportunity.fields.Amount.getSObjectField(), fflib_QueryFactory.SortOrder.ASCENDING));
+
+        testRollup(
+            new LREngine.RollupSummaryField(
+                    Schema.SObjectType.Account.fields.Description,
+                    Schema.SObjectType.Opportunity.fields.StageName,
+                    order,
+                    LREngine.RollupOperation.Concatenate, ','),
+                'test,test,test',
+                'Won,Won,Lost');
+    }     
+
     static testMethod void testRollupConcatenateNoDelimiter() {
         testRollup(
             new LREngine.RollupSummaryField(
                     Schema.SObjectType.Account.fields.Description,
                     Schema.SObjectType.Opportunity.fields.StageName,
-                    null, LREngine.RollupOperation.Concatenate, null),
+                    (Schema.Describefieldresult)null, LREngine.RollupOperation.Concatenate, null),
                 'testtesttest',
                 'LostWonWon');
     } 
@@ -727,7 +742,7 @@ private class TestLREngine {
             new LREngine.RollupSummaryField(
                     Schema.SObjectType.Account.fields.Description,
                     Schema.SObjectType.Opportunity.fields.StageName,
-                    null, LREngine.RollupOperation.Concatenate_Distinct, ','),
+                    (Schema.Describefieldresult)null, LREngine.RollupOperation.Concatenate_Distinct, ','),
                 'test',
                 'Lost,Won');
     } 
